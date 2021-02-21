@@ -49,31 +49,33 @@ void insert( LLPtr *sPtr, int value )
       
       previousPtr = NULL; 
       currentPtr = *sPtr; //กำลังชี้กล่องแรกของข้อมูลเดิม
-
-      // loop to find the correct location in the list    
-      //ข้อมูลใหม่มีค่ามากกว่า ข้อมูลที่มีอยู่เดิม   
+      // loop to find the correct location in the list 
       while ( currentPtr != NULL && value > currentPtr->data ) {
          previousPtr = currentPtr; // walk to ...               
          currentPtr = currentPtr->nextPtr; // ... next node 
       } // end while                                         
 
-      // insert new node at beginning of list --> ข้อมูลใหม่มีค่าน้อยกว่าข้อมูลเดิมทั้งหมด
+      // insert new node at beginning of list ->ตำแหน่งข้อมูลใหม่อยู่ตำแหน่งแรก
       if ( previousPtr == NULL ) {
          newPtr->nextPtr = *sPtr;   //ให้ nextPtr ชี้กล่องแรกของข้อมูลเดิม 
-         *sPtr = newPtr; //เปลี่ยนที่ชี้ให้กับ *sPtr มาชี้ที่กล่องใหม่ สีแดง
-         currentPtr = newPtr; //สีเหลือง
+         *sPtr = newPtr; //เปลี่ยนที่ชี้ให้กับ *sPtr มาชี้ที่กล่องใหม่ 
+         currentPtr = newPtr; //currentPtr->prevPtr = newPtr; ไม่ได้ Error-1 
       } // end if
+      
+      // 0 node
+      else if(*sPtr == NULL){
+        previousPtr = NULL;
+        currentPtr = NULL;
+        (*sPtr)->nextPtr = newPtr;
+        newPtr->nextPtr = currentPtr;
+      }//end else if
+
+      //nornal insert
       else { // insert new node between previousPtr and currentPtr
-        /*สถานนะ pointer:
-          currentPtr ชี้กล่องถัดไป ที่กำลังจะโดนแทรกข้างหน้า
-          previousPtr ชี้กล่องแรกของข้อมูลเดิม
-        */
-         previousPtr->nextPtr = newPtr; //previousPtr ส่วนที่เป็น nextPtr เปลี่ยนมาชี้ newPtr สีเขียว
-         newPtr->prevPtr = previousPtr; //สีเหลือง
-         newPtr->nextPtr = currentPtr; //สีเขียว
-         currentPtr = newPtr; //สีเหลือง
-         
-         
+         previousPtr->nextPtr = newPtr; //previousPtr-nextPtr เปลี่ยนมาชี้ newPtr
+         newPtr->prevPtr = previousPtr; 
+         newPtr->nextPtr = currentPtr; 
+         currentPtr  = newPtr; 
       } // end else
    } // end if
    else { //เกิดขึ้นในกรณที่ พื้นที่เต็ม 
@@ -91,12 +93,21 @@ int deletes( LLPtr *sPtr, int value )
    // delete first node
    if ( value == ( *sPtr )->data) {  //เช็คว่า ค่าที่เราเลือก ใช่ กล่องแรกไหม
         tempPtr = *sPtr; // hold onto node being removed
-        *sPtr = ( *sPtr )->nextPtr; // de-thread the node
+        *sPtr = ( *sPtr )->nextPtr;
+        (*sPtr)->prevPtr = NULL;// de-thread the node
         free( tempPtr ); // free the de-threaded node
-        (*sPtr)->prevPtr = NULL;
         return value;
    } // end if
-  else { 
+
+  //delete last node Error-2
+   else if(value == ( *sPtr )->data && (*sPtr)->nextPtr ==NULL){
+     (*sPtr) = NULL;
+     tempPtr = NULL;
+     free(*sPtr);
+   }// end else if
+   
+   //other node
+   else { 
       previousPtr = *sPtr;
       currentPtr = ( *sPtr )->nextPtr;
 
@@ -108,17 +119,20 @@ int deletes( LLPtr *sPtr, int value )
 
       // delete node at currentPtr
       if ( currentPtr != NULL ) { 
+        //not last node and have other nodes
+        if(currentPtr->nextPtr != NULL){
          tempPtr = currentPtr; //ชี้กล่องถูกใจ
-          if(currentPtr->nextPtr !=NULL){
-            previousPtr->nextPtr = currentPtr->nextPtr; //ชี้กล่องถัดจากกล่องถูกใจ
-            currentPtr->nextPtr->prevPtr = previousPtr;
-            free( tempPtr );
-          }
-          else {//กรณีเหลือ 2 กล่องสุดท้าย<-->if(currentPtr->next == NULL)
-            previousPtr->nextPtr = NULL;
-            free(tempPtr);
-          }
-          return value;
+         previousPtr->nextPtr = currentPtr->nextPtr; //ชี้กล่องถัดจากกล่องถูกใจ
+         currentPtr->nextPtr->prevPtr = previousPtr;
+         free( tempPtr );
+        }
+        //have last 2 nodes,delete last node
+        else {
+          tempPtr = currentPtr;
+          previousPtr->nextPtr = NULL;
+          free(tempPtr);
+        }
+         return value;
       } // end if
 
    }//end else
