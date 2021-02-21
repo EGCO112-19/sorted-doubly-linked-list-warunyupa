@@ -20,7 +20,8 @@ int main( )
             printf( "%s", "Enter a number: " );
             scanf( "%d", &item );
             insert( &startPtr, item ); // insert item in list
-            printList( startPtr );
+            printList( startPtr ); //
+            printListR(startPtr ); //print list but Reverse
             break;
          case 2: // delete an element
             // if list is not empty
@@ -32,6 +33,7 @@ int main( )
                if ( deletes( &startPtr, item ) ) { // remove item
                   printf( "%d deleted.\n", item );
                   printList( startPtr );
+                  printListR(startPtr);
                } // end if
                else {
                   printf( "%d not found.\n\n", item );
@@ -42,7 +44,7 @@ int main( )
             } // end else
 
             break;
-         default:
+         default: //กรณีพิมพ์เลขอื่นที่ไม่ใช่ 1,2,3 
             puts( "Invalid choice.\n" );
             instructions();
             break;

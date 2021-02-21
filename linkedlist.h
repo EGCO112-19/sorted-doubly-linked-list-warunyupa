@@ -2,16 +2,21 @@
 struct Node {                                      
    int data; // each listNode contains a character 
    struct Node *nextPtr; // pointer to next node
-}; // end structure listNode                        
-typedef LLnode *LLPtr; // synonym for ListNode*
+   struct Node *prevPtr; // pointer to previous node
+}; // end structure listNode  
+
 typedef struct Node LLnode; // synonym for struct listNode
+typedef LLnode *LLPtr; // synonym for ListNode* //pointer ของ LLnode
+//หรือ typerdef  LLnode* LLPtr;
 
 // prototypes
+
 
 int deletes( LLPtr *sPtr, int value );
 int isEmpty( LLPtr sPtr );
 void insert( LLPtr *sPtr, int value );
 void printList( LLPtr currentPtr );
+void printListR( LLPtr currentPtr );
 void instructions( void );
 
 
@@ -34,32 +39,44 @@ void insert( LLPtr *sPtr, int value )
    LLPtr previousPtr; // pointer to previous node in list
    LLPtr currentPtr; // pointer to current node in list
 
+  //สร้างกล่องข้อมูลใหม่
    newPtr =(LLPtr) malloc( sizeof( LLnode ) ); // create node
-
+  //ใส่ค่าให้กล่องข้อมูลใหม่
    if ( newPtr != NULL ) { // is space available
       newPtr->data = value; // place value in node
       newPtr->nextPtr = NULL; // node does not link to another node
+      newPtr->prevPtr = NULL;
+      
+      previousPtr = NULL; 
+      currentPtr = *sPtr; //กำลังชี้กล่องแรกของข้อมูลเดิม
 
-      previousPtr = NULL;
-      currentPtr = *sPtr;
-
-      // loop to find the correct location in the list       
+      // loop to find the correct location in the list    
+      //ข้อมูลใหม่มีค่ามากกว่า ข้อมูลที่มีอยู่เดิม   
       while ( currentPtr != NULL && value > currentPtr->data ) {
          previousPtr = currentPtr; // walk to ...               
          currentPtr = currentPtr->nextPtr; // ... next node 
       } // end while                                         
 
-      // insert new node at beginning of list
-      if ( previousPtr == NULL ) { 
-         newPtr->nextPtr = *sPtr;
-         *sPtr = newPtr;
+      // insert new node at beginning of list --> ข้อมูลใหม่มีค่าน้อยกว่าข้อมูลเดิมทั้งหมด
+      if ( previousPtr == NULL ) {
+         newPtr->nextPtr = *sPtr;   //ให้ nextPtr ชี้กล่องแรกของข้อมูลเดิม 
+         *sPtr = newPtr; //เปลี่ยนที่ชี้ให้กับ *sPtr มาชี้ที่กล่องใหม่ สีแดง
+         currentPtr = newPtr; //สีเหลือง
       } // end if
       else { // insert new node between previousPtr and currentPtr
-         previousPtr->nextPtr = newPtr;
-         newPtr->nextPtr = currentPtr;
+        /*สถานนะ pointer:
+          currentPtr ชี้กล่องถัดไป ที่กำลังจะโดนแทรกข้างหน้า
+          previousPtr ชี้กล่องแรกของข้อมูลเดิม
+        */
+         previousPtr->nextPtr = newPtr; //previousPtr ส่วนที่เป็น nextPtr เปลี่ยนมาชี้ newPtr สีเขียว
+         newPtr->prevPtr = previousPtr; //สีเหลือง
+         newPtr->nextPtr = currentPtr; //สีเขียว
+         currentPtr = newPtr; //สีเหลือง
+         
+         
       } // end else
    } // end if
-   else {
+   else { //เกิดขึ้นในกรณที่ พื้นที่เต็ม 
       printf( "%d not inserted. No memory available.\n", value );
    } // end else
 } // end function insert
@@ -72,13 +89,14 @@ int deletes( LLPtr *sPtr, int value )
    LLPtr tempPtr; // temporary node pointer
 
    // delete first node
-   if ( value == ( *sPtr )->data ) { 
-      tempPtr = *sPtr; // hold onto node being removed
-      *sPtr = ( *sPtr )->nextPtr; // de-thread the node
-      free( tempPtr ); // free the de-threaded node
-      return value;
+   if ( value == ( *sPtr )->data) {  //เช็คว่า ค่าที่เราเลือก ใช่ กล่องแรกไหม
+        tempPtr = *sPtr; // hold onto node being removed
+        *sPtr = ( *sPtr )->nextPtr; // de-thread the node
+        free( tempPtr ); // free the de-threaded node
+        (*sPtr)->prevPtr = NULL;
+        return value;
    } // end if
-   else { 
+  else { 
       previousPtr = *sPtr;
       currentPtr = ( *sPtr )->nextPtr;
 
@@ -90,13 +108,20 @@ int deletes( LLPtr *sPtr, int value )
 
       // delete node at currentPtr
       if ( currentPtr != NULL ) { 
-         tempPtr = currentPtr;
-         previousPtr->nextPtr = currentPtr->nextPtr;
-         free( tempPtr );
-         return value;
+         tempPtr = currentPtr; //ชี้กล่องถูกใจ
+          if(currentPtr->nextPtr !=NULL){
+            previousPtr->nextPtr = currentPtr->nextPtr; //ชี้กล่องถัดจากกล่องถูกใจ
+            currentPtr->nextPtr->prevPtr = previousPtr;
+            free( tempPtr );
+          }
+          else {//กรณีเหลือ 2 กล่องสุดท้าย<-->if(currentPtr->next == NULL)
+            previousPtr->nextPtr = NULL;
+            free(tempPtr);
+          }
+          return value;
       } // end if
-   } // end else
 
+   }//end else
    return '\0';
 } // end function delete
 
@@ -125,3 +150,27 @@ void printList( LLPtr currentPtr )
       puts( "NULL\n" );
    } // end else
 } // end function printList
+
+// Reverse print list
+void printListR( LLPtr currentPtr )
+{ 
+   // if list is empty
+   if ( isEmpty( currentPtr ) ) {
+      puts( "List is empty.\n" );
+   } // end if
+   else { 
+      puts( "The list is:" );
+
+      // while not the end of the list
+      printf("NULL ");
+      while(currentPtr->nextPtr !=NULL){
+        currentPtr = currentPtr->nextPtr;
+      }
+      while (currentPtr!= NULL ) { 
+         printf( "--> %d  ", currentPtr->data );
+         currentPtr = currentPtr->prevPtr;   
+      } // end while
+      puts("\n");
+
+   } // end else
+} // end function printListR
